@@ -40,7 +40,7 @@ configuration:
       config:
         # failureReason: 'error checking if backup already exists in object storage: rpc error: code = Unknown desc = operation error S3: HeadObject, resolve auth scheme: resolve endpoint: endpoint rule error, Invalid region: region was not a valid DNS name.'
         region: dummy
-      #  s3ForcePathStyle: "true"
+        s3ForcePathStyle: "true"
       #  s3Url: "http://rgw-from-rook:9000"
       #  kmsKeyId:
       #  resourceGroup:

@@ -87,9 +87,12 @@ test-s3-io: ## Run S3 IO Test
 
 .PHONY: test-velero
 test-velero: ## Test Velero Backup
-	kubectl delete -f manifests/nginx.yaml 2 >/dev/null || true
-	kubectl delete -f manifests/backup-rbd-pvc.yaml 2>/dev/null || true 
-	. ./s3-bucket-env.sh && aws s3 rm --recursive s3://$${BUCKET_NAME}/backups || true 
+	kubectl delete -f manifests/nginx.yaml -f manifests/backup-rbd-pvc.yaml 2>/dev/null || true
+	# docker run --rm -it amazon/aws-cli --version
+	. $(TOOLS_DIR)/s3-bucket-env.sh && kubectl run --rm -i aws-cli --image=amazon/aws-cli --env="AWS_ENDPOINT_URL=$${AWS_ENDPOINT_URL}" --env="AWS_HOST=$${AWS_HOST}" --env="AWS_ACCESS_KEY_ID=$${AWS_ACCESS_KEY_ID}" --env="AWS_SECRET_ACCESS_KEY=$${AWS_SECRET_ACCESS_KEY}" -- s3 rm --recursive s3://$${BUCKET_NAME}/backups || true
+	# . $(TOOLS_DIR)/s3-bucket-env.sh && aws s3 rm --recursive s3://$${BUCKET_NAME}/backups || true
+	kubectl apply -f manifests/nginx.yaml
+	kubectl wait --timeout=180s --for=jsonpath='{.status.availableReplicas}'=1 deployment/nginx
+	# TODO: Should wait for the Deployment to be ready
 	kubectl apply -f manifests/backup-rbd-pvc.yaml
-	kubectl apply -f manifests/backup-rbd-pvc.yaml
-	kubectl -n velero wait --for=jsonpath='{.status.phase}'=Completed backup/rbd-pvc
+	kubectl -n velero wait --timeout=180s --for=jsonpath='{.status.phase}'=Completed backup/rbd-pvc
